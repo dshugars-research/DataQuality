@@ -1,0 +1,250 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+    
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    <!-- <script src="http://code.jquery.com/jquery-1.9.1.js"></script> -->
+    <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+
+
+    <script>
+        var arrOverview = ["Strategy", "Data-Quality"];
+        var arrChallenges = ["CSharp-Challenges", "Javascript-Challenges"];
+        var arrTechnical = ["CSharp", "Javascript", "Data-Quality-Technical"];
+        var arrFurtherAdvancement = ["Visualization-Advancement", "Data-Quality-Advancement"];
+
+        $(function () {
+            $("#aboutDialog").dialog({ autoOpen: false });
+        });
+        
+        function AboutDialog() {
+            
+            $("#aboutDialog").dialog("open");
+        }
+        function LoadTabContent(el) {
+            $(el).removeClass("TabHeader").addClass("SelectedTabHeader");
+            var strId = el.id + "-Content";
+            //alert(strId);
+            document.getElementById(strId).style.display = "block";
+
+            var arr = [];
+            if (arrOverview.indexOf(el.id) >= 0) {
+                arr = arrOverview;
+            }
+            if (arrChallenges.indexOf(el.id) >= 0) {
+                arr = arrChallenges;
+            }
+            if (arrTechnical.indexOf(el.id) >= 0) {
+                arr = arrTechnical;
+            }
+            if (arrFurtherAdvancement.indexOf(el.id) >= 0) {
+                arr = arrFurtherAdvancement;
+            }
+
+            if (arr.indexOf(el.id) >= 0) {
+                arr.forEach(function (val) {
+                    if (val != el.id) {
+                        $(document.getElementById(val)).addClass("TabHeader");
+                        document.getElementById(val + "-Content").style.display = "none";
+                    }
+                });
+            }
+        }
+    </script>
+    <style>
+        div.TabHeader {
+            cursor:pointer;
+            color:blue;
+            background-color:gray;
+            
+        }
+        div.SelectedTabHeader{
+
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // tabs in dialogs: http://stackoverflow.com/questions/3808554/jquery-ui-dialog-how-to-add-tabs-to-content-area
+
+    $(function() {
+        $("#tabs").tabs().addClass('ui-tabs-vertical ui-helper-clearfix');
+        $("#tabs li").removeClass('ui-corner-top').addClass('ui-corner-left');
+    });
+
+    $(document).ready(function () {
+    $("#aboutDialog").dialog({
+        resizable:true,
+        closeOnEscape: true,
+        modal: true,
+        width: 900,
+        height: 500
+    }).parent().find('div.ui-dialog-titlebar').addClass('titleClass');
+    });
+    </script>
+    <style>
+        .ui-tabs-vertical { width: 55em; }
+        .ui-tabs-vertical .ui-tabs-nav { padding: .2em .1em .2em .2em; float: left; width: 14em; }
+        .ui-tabs-vertical .ui-tabs-nav li { clear: left; width: 100%; border-bottom-width: 1px !important; border-right-width: 0 !important; margin: 0 -1px .2em 0; }
+        .ui-tabs-vertical .ui-tabs-nav li a { display:block; }
+        .ui-tabs-vertical .ui-tabs-nav li.ui-tabs-selected { padding-bottom: 0; padding-right: .1em; border-right-width: 1px; border-right-width: 1px; }
+        .ui-tabs-vertical .ui-tabs-panel { padding: 1em; float: right; width: 40em;}
+    </style>
+
+    <div id="aboutDialog" style="background-color:Gray; text-align:center;">
+        <div class="demo">
+            <div id="tabs">
+                <ul>
+                    <li><a href="#tabs-1">Overview</a></li>
+                    <li><a href="#tabs-2">
+                        Technical Structure
+                        </a>
+                    </li>
+                        
+                    <li><a href="#tabs-3">Challenges Encountered</a></li>
+                    <li><a href="#tabs-4">Further Advancements</a></li>
+                </ul>
+                <div id="tabs-1">
+                    <h2>Overview</h2>
+                    <table style="border:none;"><tr><td style="padding-right:3em"><div id="Strategy" class="TabHeader" onclick="Javascript:LoadTabContent(this);">Strategy</div></td><td style="padding-right:3em"><div id="Data-Quality" class="TabHeader" onclick="Javascript:LoadTabContent(this);">Data Quality</div></td></tr></table>
+
+                    <div id="Strategy-Content" style="display:none">
+                        The goal of this project is to provide a novel mechanism for viewing data quality issues for semantic web or linked open data through visualization techniques.
+                        As new data is visualized in a directed graph, the data is analyzed for various data quality violations.  
+                        To this date, similar visualization techniques for viewing data quality issues do not appear to be available.
+                    </div>
+                    <div id="Data-Quality-Content" style="display:none">
+                        The violations analyzed can include such things as literal nodes that contain duplicate information, literal nodes that appear to have URI nodes
+                        specified elsewhere in the document, URI's that don't dereference properly, and so on.
+                        
+                    </div>
+                </div>
+                <div id="tabs-2">
+                    <h2>Technical Structure</h2>
+                    <table style="border:none;"><tr><td style="padding-right:3em"><div id="CSharp" class="TabHeader" onclick="Javascript:LoadTabContent(this);">C#</div></td><td style="padding-right:3em"><div id="Javascript" class="TabHeader" onclick="Javascript:LoadTabContent(this);">Javascript</div></td><td style="padding-right:3em"><div id="Data-Quality-Technical" class="TabHeader" onclick="Javascript:LoadTabContent(this);">Data Quality</div></td></tr></table>
+
+                    <div id="CSharp-Content" style="display:none">
+                        This project is impleplemented using Microsoft C#.
+
+                        A main Index action is used to render the initial
+                        display shown to the user.  As the user selects Load from the interface, AJAX is used to get a JSON
+                        response for the graph data.  The graph data is displayed to the user using the InfoVis library
+                        for visualization.
+                        The dotNetRdf library is used in C# to handle the parsing and initial process of the rdf documents.
+                    </div>
+                    <div id="Javascript-Content" style="display:none">
+                        Javascript implementation with the InfoVis library
+                    </div>
+                    <div id="Data-Quality-Technical-Content">
+                        A list of the data quality violations that are analyzed:
+                        
+                        duplicate property but same value.
+                        duplicate property with different names with different values but look like they are the same.
+                        duplicate property with different names with same values.
+                        duplicate property with same name different values.
+                        names are the same but the namespaces are different.
+
+                        URIs that fail to dereference.
+
+                        URIs that point to another node however there are literal nodes with the same value.
+
+                    </div>
+                </div>
+                <div id="tabs-3">
+                    <h2>Challenges Encountered</h2>
+                    <table style="border:none;"><tr><td style="padding-right:3em"><div id="CSharp-Challenges" class="TabHeader" onclick="Javascript:LoadTabContent(this);">C#</div></td><td style="padding-right:3em"><div id="Javascript-Challenges" class="TabHeader" onclick="Javascript:LoadTabContent(this);">Javascript</div></td></tr></table>
+                    <div id="CSharp-Challenges-Content" style="display:none">
+                        There is a learning curve to the Microsoft ASP.Net MVC framework.  Model binding in particular takes
+                        some adjustment compared to other web development platforms.  Model binding allows controller actions
+                        to receive JSON as a parameter and map the HTTP Post form variables directly to a certain parameter.
+
+                        dotNetRDF:
+                        Ah I see what the issue is, so this is a combination of two separate bugs colliding.
+
+                        The first bug is that Virtuoso is incorrectly sending a text/plain Content-Type when outputting Turtle/N3 meaning dotNetRDF selects the wrong parser
+
+                        The second bug is in dotNetRDF and explains why you get an empty graph rather than a parser error, the UriLoader has some caching logic built into it to avoid trips out over the network where possible or where ETags indicate that a resource has not changed.  However some of the logic around error handling wrt caching (because if we fail to parse the response we don't want to cache a partial response) was inadvertently swallowing the error rather than populating it up the stack.  This is filed as CORE-391 (http://dotnetrdf.org/tracker/Issues/IssueDetail.aspx?id=391)
+
+                        Even with the fix you are now going to get errors instead of an empty graph because of Virtuoso's dud Content-Type declaration.  To work around both bugs you can explicitly specify the parser to be used which will also restrict what content types dotNetRDF will request I.e.
+
+                        URILoader.Load(g, new Uri("http://dbpedia.org/ontology/wikiPageRedirects"), new RdfXmlParser())
+
+                        For me this successfully returns a graph whereas not specifying a parser now gives me a parser error due to the incorrect parser selection driven by the bad Content-Type header.  I'll probably push the fix a little later today.
+
+                        Obviously if you are going to do this lots then I would create a single instance of the parser and just pass it in to each call.
+
+                        Apologies for the inconvenience,
+
+                        Rob
+
+
+
+
+                    </div>
+                        <div id="Javascript-Challenges-Content" style="display:none">
+                            Javascript challenges
+                        </div>
+                </div>
+                <div id="tabs-4">
+                    <h2>Further Advancement</h2>
+                    <table style="border:none;"><tr><td style="padding-right:3em"><div id="Visualization-Advancement" class="TabHeader" onclick="Javascript:LoadTabContent(this);">Visualization</div></td><td style="padding-right:3em"><div id="Data-Quality-Advancement" class="TabHeader" onclick="Javascript:LoadTabContent(this);">Data Quality</div></td></tr></table>
+                    <div id="Visualization-Advancement-Content" style="display:none">
+                        Visualization advancement: adapt user behavior into the model to allow us to anticipate user action
+                        and load more data for the user.
+                    </div>
+                    <div id="Data-Quality-Advancement-Content" style="display:none">
+                        Data quality advancement: Looking for more violations to display to the user.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-description">
+        </div>
+    </div>
+    <!-- 
+    <div id="aboutDialog" title="Basic dialog">
+        <p>This is the default dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
+    </div> -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @Html.ActionLink("Data Quality Visualization", "Index", "Home", null, new { @class = "navbar-brand" })
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                    <li><a href="javascript:AboutDialog()">About</a></li>
+                    <!-- at symbol hereHtml.ActionLink("About", "About", "Home") -->
+                    <li><a href="mailto:dshugars@umd.umich.edu">Contact</a></li>
+                    <!-- at symbol hereHtml.ActionLink("Contact", "Contact", "Home") -->
+                </ul>
+                <!-- at symbol hereHtml.Partial("_LoginPartial") -->
+            </div>
+        </div>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year</p>
+        </footer>
+    </div>
+
+    
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    
+</body>
+</html>

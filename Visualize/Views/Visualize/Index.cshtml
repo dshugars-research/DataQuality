@@ -1,0 +1,617 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Visualize";
+}
+
+<h2>Visualize</h2>
+<!-- <link type="text/css" href="http://philogb.github.io/jit/static/v20/jit/Examples/css/base.css" rel="stylesheet" /> -->
+<!-- <link type="text/css" href="http://philogb.github.io/jit/static/v20/jit/Examples/css/ForceDirected.css" rel="stylesheet" /> -->
+
+<script language="javascript" type="text/javascript" src="http://philogb.github.io/jit/static/v20/Jit/jit-yc.js"></script>
+<!-- <script src="~/Scripts/jquery-1.10.2.js"></script> -->
+
+<style>
+    html, body {
+        /*
+        margin: 0;
+        padding: 0;
+        font-family: "Lucida Grande", Verdana;
+        font-size: 0.9em;
+        text-align: center;
+        background-color: #F2F2F2;
+            */
+    }
+
+    input, select {
+        font-size: 0.9em;
+    }
+
+    table {
+        /*margin-top: -10px;
+        margin-left: 7px;*/
+    }
+
+    h4 {
+        font-size: 1.1em;
+        text-decoration: none;
+        font-weight: normal;
+        color: #23A4FF;
+    }
+
+    a {
+        color: #23A4FF;
+    }
+
+    #container {
+        width: 1000px;
+        height: 600px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    #left-container,
+    #right-container,
+    #center-container {
+        height: 600px;
+        position: absolute;
+        top: 0;
+    }
+
+    #left-container, #right-container {
+        width: 200px;
+        color: #686c70;
+        text-align: left;
+        overflow: auto;
+        background-color: #fff;
+        background-repeat: no-repeat;
+        border-bottom: 1px solid #ddd;
+    }
+
+    #left-container {
+        left: 0;
+        background-image: url('col2.png');
+        background-position: center right;
+        border-left: 1px solid #ddd;
+    }
+
+    #right-container {
+        right: 0;
+        background-image: url('col1.png');
+        background-position: center left;
+        border-right: 1px solid #ddd;
+    }
+
+        #right-container h4 {
+            text-indent: 8px;
+        }
+
+    #center-container {
+        width: 600px;
+        left: 200px;
+        background-color: #1a1a1a;
+        color: #ccc;
+    }
+
+    .text {
+        margin: 7px;
+    }
+
+    #inner-details {
+        font-size: 0.8em;
+        list-style: none;
+        margin: 7px;
+    }
+
+    #log {
+        position: absolute;
+        top: 10px;
+        font-size: 1.0em;
+        font-weight: bold;
+        color: #23A4FF;
+    }
+
+
+    #infovis {
+        position: relative;
+        width: 600px;
+        height: 600px;
+        margin: auto;
+        overflow: hidden;
+    }
+
+    /*TOOLTIPS*/
+    .tip {
+        color: #111;
+        width: 139px;
+        background-color: white;
+        border: 1px solid #ccc;
+        -moz-box-shadow: #555 2px 2px 8px;
+        -webkit-box-shadow: #555 2px 2px 8px;
+        -o-box-shadow: #555 2px 2px 8px;
+        box-shadow: #555 2px 2px 8px;
+        opacity: 0.9;
+        filter: alpha(opacity=90);
+        font-size: 10px;
+        font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+        padding: 7px;
+    }
+#inner-details {
+  font-size:12px;
+}
+
+span.close {
+	color:#FF5555;
+	cursor:pointer;
+	font-weight:bold;
+	margin-left:3px;
+}
+
+span.name {
+  cursor: pointer;
+}
+
+/*TOOLTIPS*/
+.tip {
+   text-align: left;
+   width:auto;
+   max-width:500px;
+}
+
+.tip-title {
+  font-size: 11px;
+  text-align:center;
+  margin-bottom:2px;
+}
+    .tblViolationStyle {
+        border: 1px solid black;
+    } 
+    
+
+    
+</style>
+
+<script>
+    var jsonData;
+    var dataSet;
+
+    var labelType, useGradients, nativeTextSupport, animate;
+    var nextDist = 0;
+    var distArr = new Array(); 
+    distArr = [100, 200, 300, 400, 500, 600, 700];
+
+    (function() {
+        var ua = navigator.userAgent,
+            iStuff = ua.match(/iPhone/i) || ua.match(/iPad/i),
+            typeOfCanvas = typeof HTMLCanvasElement,
+            nativeCanvasSupport = (typeOfCanvas == 'object' || typeOfCanvas == 'function'),
+            textSupport = nativeCanvasSupport 
+              && (typeof document.createElement('canvas').getContext('2d').fillText == 'function');
+        //I'm setting this based on the fact that ExCanvas provides text support for IE
+        //and that as of today iPhone/iPad current text support is lame
+        labelType = (!nativeCanvasSupport || (textSupport && !iStuff))? 'Native' : 'HTML';
+        nativeTextSupport = labelType == 'Native';
+        useGradients = nativeCanvasSupport;
+        animate = !(iStuff || !nativeCanvasSupport);
+    })();
+
+    var Log = {
+        elem: false,
+        write: function(text){
+            if (!this.elem) 
+                this.elem = document.getElementById('log');
+            this.elem.innerHTML = text;
+            this.elem.style.left = (500 - this.elem.offsetWidth / 2) + 'px';
+        }
+    };
+
+    
+    var fd;
+    function init(){
+        // init data
+        // end
+        // init ForceDirected
+        fd = new $jit.ForceDirected({
+            //id of the visualization container
+            injectInto: 'infovis',
+            //Enable zooming and panning
+            //by scrolling and DnD
+            Navigation: 
+            {
+                enable: true,
+                //Enable panning events only if we're dragging the empty
+                //canvas (and not a node).
+                panning: 'avoid nodes',
+                zooming: 10 //zoom speed. higher is more sensible
+            },
+            // Change node and edge styles such as
+            // color and width.
+            // These properties are also set per node
+            // with dollar prefixed data-properties in the
+            // JSON structure.
+            Node: {
+                overridable: true
+            },
+            Edge: {
+                overridable: true,
+                color: '#23A4FF',
+                lineWidth: 0.4
+            },
+            //Native canvas text styling
+            Label: {
+                type: labelType, //Native or HTML
+                size: 10,
+                style: 'bold'
+            },
+            //Add Tips
+            Tips: {
+                enable: true,
+                onShow: function(tip, node) {
+                    //count connections
+                    var count = 0;
+                    node.eachAdjacency(function() { count++; });
+                    //display node info in tooltip
+                    tip.innerHTML = "<div class=\"tip-title\">" + node.name + "</div>"
+                      + "<div class=\"tip-text\"><b>points to:</b> " + node.data.text + "</div>";
+                }
+            },
+            // Add node events
+            Events: {
+                enable: true,
+                type: 'Native',
+                //Change cursor style when hovering a node
+                onMouseEnter: function() {
+                    fd.canvas.getElement().style.cursor = 'move';
+                },
+                onMouseLeave: function() {
+                    fd.canvas.getElement().style.cursor = '';
+                },
+                //Update node positions when dragged
+                onDragMove: function(node, eventInfo, e) {
+                    var pos = eventInfo.getPos();
+                    Log.write("setting position to:" + pos.x + ", " + pos.y);
+                    node.pos.setc(pos.x, pos.y);
+                    fd.plot();
+                },
+                //Implement the same handler for touchscreens
+                onTouchMove: function(node, eventInfo, e) {
+                    $jit.util.event.stop(e); //stop default touchmove event
+                    this.onDragMove(node, eventInfo, e);
+                },
+                //Add also a click handler to nodes
+                onClick: function(node) {
+                    if(!node) return;
+                    // Build the right column relations list.
+                    // This is done by traversing the clicked node connections.
+                    var html = "<h4>" + node.name + "</h4><b> connections:</b><ul><li>",
+                        list = [];
+                    node.eachAdjacency(function(adj){
+                        list.push(adj.nodeTo.name);
+                    });
+                    //append connections information
+                    // $jit.id('inner-details').innerHTML = html + list.join("</li><li>") + "</li></ul>";
+                    node.data.clicked = true;
+                    $.each(jsonData, function (index, el) {
+                        if(el.id == node.id){
+                            jsonData[index].data.clicked = true;
+                        }
+                    });
+                    jsonData = fd.json;
+                    //alert( JSON.stringify(jsonData));
+                    // alert("getting next");
+                    GetNext();
+                }
+            },
+            //Number of iterations for the FD algorithm
+            iterations: 200,
+            //Edge length
+            levelDistance: function(){
+                150;
+                /*
+                nextDist++;
+                if(nextDist == distArr.length)
+                    nextDist = 0;
+                return distArr[nextDist];*/
+            },
+            // Add text to the labels. This method is only triggered
+            // on label creation and only for DOM labels (not native canvas ones).
+            onCreateLabel: function(domElement, node){
+                domElement.innerHTML = node.name;
+                var style = domElement.style;
+                style.fontSize = "0.8em";
+                style.color = "#ddd";
+            },
+            // Change node styles when DOM labels are placed
+            // or moved.
+            onPlaceLabel: function(domElement, node){
+                var style = domElement.style;
+                var left = parseInt(style.left);
+                var top = parseInt(style.top);
+                var w = domElement.offsetWidth;
+                style.left = (left - w / 2) + 'px';
+                style.top = (top + 10) + 'px';
+                style.display = '';
+            }
+        });
+        // load JSON data.
+        //fd.loadJSON(json);
+        Log.write("loading json to graph");
+        fd.loadJSON(jsonData);
+        
+        // compute positions incrementally and animate.
+        fd.computeIncremental( {
+                iter: 10,
+                property: 'end',
+                onStep: function(perc)
+                {
+                    Log.write(perc + '% loaded...');
+                },
+                onComplete: function()
+                {
+                    //alert("Getting Next");
+                    //Log.write("run again in 10 seconds");
+                    //setTimeout(GetNext, 10000);
+                    // Log.write('done');
+                    //fd.plot();
+                    
+                    fd.animate(
+                    {
+                        //modes: ['linear'],
+                        modes: {  
+                            'position': 'linear',  
+                            'node-property': ['width', 'height'],  
+                            //'node-style': 'shadowColor',  
+                            //'label-property': 'size'  
+                        },  
+                        // transitions defined here: http://philogb.github.io/jit/static/v20/Docs/files/Options/Options-Fx-js.html#Options.Fx
+                        transition: $jit.Trans.linear,
+                        duration: 500
+                    });
+                    
+                    MoveMainNode();
+                    
+                    var count = 0;
+                    setTimeout(function()
+                    {
+                        //alert("move node back");
+                        MoveMainNode();
+                        //alert("done moving node back");
+                        GetMainNodePosition();
+                    }, 1000);
+                    
+                }
+        });
+        //fd.graph.nodes[0].pos.setc(50, 50);
+        //$.each(fd.graph.nodes )
+        var count = 0;
+        MoveMainNode();
+       
+    }
+    function GetMainNodePosition()
+    {
+        var count = 0;
+        $.each(fd.graph.nodes, function (index, el) {
+            if(el.name == "Tetris"){
+                //alert(JSON.stringify(el.getc));
+                Log.write("moving Tetris node")
+                //alert("done moving node");
+            }
+                
+            count++;
+        });
+    }
+    function MoveMainNode()
+    {
+        var count = 0;
+        $.each(fd.graph.nodes, function (index, el) {
+            if(el.name == "Tetris"){
+                el.pos.setc(-500, -300);
+                Log.write("moving Tetris node")
+                //alert("done moving node");
+            }
+                
+            count++;
+        });
+        fd.plot();
+    }
+        // end
+    function GetNext()
+    {
+        // alert("inside getting next")
+        // $.post( "GetNext", "visualization=" + jsonData, null, ");
+            
+        //alert(JSON.stringify(jsonData));
+
+        
+            //jsonData = serializeData(jsonData);
+            //alert( JSON.stringify(jsonData));
+            //jsonData = cloneObject(jsonData);
+        //alert(JSON.stringify(jsonData));
+        var nc;
+        // nc.Graphs = dataSet;
+        // nc.json = jsonData;
+         // alert(JSON.stringify(dataSet));
+        $.ajax({
+            url: "Visualize/GetNext",
+            type: 'POST',
+            data: "{\"visualization\":" + JSON.stringify(jsonData) + ", \"Graphs\":" + JSON.stringify(dataSet) + "}",
+                //data: jsonData,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data, status, xhr) {
+                    // alert("success getting next")
+                    //fd.graph.empty();
+                    /*
+                    fd.graph.eachNode(function(n) {  
+                        n.setData('alpha', 0, 'end'); 
+                        // delete n;  
+                        Log.write('deleting nodes...');
+                    });
+                    Log.write('completed deleting nodes...');
+                       
+                    fd.fx.animate({  
+                        modes: ['node-property:dim',  
+                                'edge-property:lineWidth:color'],  
+                        duration: 500  
+                    });
+                    //fd.loadJSON(jsonData);
+                    fd.refresh(); */
+                    //fd.loadJSON(data);
+                    var dataString = new String();
+                    
+                    dataString = JSON.stringify(data);
+                    dataString = NormalizeProperties(dataString);
+                    
+
+                    jsonData = (JSON.parse(dataString));
+                    document.getElementById("infovis").innerHTML = "";
+                    document.getElementById("data").innerHTML = JSON.stringify(data);
+                    init();
+                },
+                error: function(xhr, status, error) {
+                    //var err = eval("(" + xhr.responseText + ")");
+                    alert(err.Message);
+                }
+            });
+        
+    };
+    function NormalizeProperties(dataString){
+        dataString = dataString.replace(/height/gi, "$height");
+        dataString = dataString.replace(/width/gi, "$width");
+        dataString = dataString.replace(/dim/gi, "$dim");
+        dataString = dataString.replace(/type/gi, "$type");
+        dataString = dataString.replace(/color/gi, "$color");
+        return dataString;
+    }
+
+    function serializeData(data) {
+        if (!data || !$.isArray(data)) {
+            return data;
+        }
+
+        var i = data.length;
+        var serialized = {};
+      
+        while (i--) {
+            $.each(data[i], function (prop) {
+                if( prop == "adjacencies"){
+                    // var j = data[i].prop.length;
+                    $.each(data[i].prop, function (index, prop) {
+                        // mvc expects list params to be prefixed with an index
+                        //serialized["[" + i + "]." + prop[index]] = data[i][prop][index];
+                        serialized[i + "." + prop] = data[i][prop];
+                    });
+                }
+                else{
+                    serialized[i][prop] = data[i][prop];
+                }
+               
+            });
+        }
+
+        return serialized;
+    }
+
+    function cloneObject(obj) {
+        debugger;
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+ 
+        var temp = obj.constructor(); // give temp the original obj's constructor
+        for (var key in obj) {
+            if(key=="adjacencies"){
+                if( obj[key].length > 0){
+                    var newArr = new Array();
+                    temp[key] = new Array();
+                    for(var i = 0; i < obj[key].length; i++ )
+                        //newArr[key + "." + i] = obj[key][i];
+                        temp[key][key + "." + i] = obj[key][i];
+                    //i + "." + key
+                    //temp[key] = newArr;
+                }
+                
+            }
+            else
+                temp[key] = cloneObject(obj[key]);
+        }
+ 
+        return temp;
+    }
+
+    </script>
+
+<script>
+    function Load(){
+        
+        //alert(JSON.stringify(jsonData));
+        $.ajax({
+            url: "Visualize/Initialize",
+            type: 'GET',
+            data: "InitialURI=" + document.getElementById("txtURI").value,
+            success: function (data, status, xhr) {
+                // alert("success");
+                //alert(data);
+                // document.getElementById("mainContainer").innerHTML = data;
+                // alert(document.getElementById("mainContainer").innerHTML);
+                jsonData = data.json;
+                dataSet = data.Graphs;
+                document.getElementById("infovis").setAttribute('style', 'width:1200px;height:750px;background-color:black');
+                // alert(JSON.stringify(jsonData));
+                // alert(JSON.stringify(dataSet));
+                ProcessViolations(jsonData);
+                init();
+            },
+            error: function (xhr, status, error) {
+                
+                alert("error loading")
+            }
+        });
+
+    }
+    function ProcessViolations(data) {
+        $.each(data, function (index, el) {
+            if (el.data.Messages.length > 0 ) {
+                $.each(el.data.Messages, function (iter, violation) {
+                    var tableRef = document.getElementById("tblViolations"); 
+                    var row = tableRef.insertRow(tableRef.rows.length);
+                    
+                    var newViolation = row.insertCell(0);
+                    newViolation.innerHTML = violation;
+                    var newDetail = row.insertCell(1);
+                    newDetail.innerHTML = el.name;
+                    var newURIInfo = row.insertCell(2);
+                    newURIInfo.innerHTML = el.data.URI;
+                    //.Ad.innerHTML = document.getElementById("divViolations").innerHTML + violation + "&nbsp;&nbsp;&nbsp;" + el.name + " &nbsp; &nbsp; &nbsp;";
+                });
+            }
+        });
+    }
+</script>
+
+@*
+    @foreach (var item in Model)
+    {
+        <div>@item</div>
+    }*@
+<div id="inputArea"><div id="divURI" >URI:</div><input size="50" value="http://dbpedia.org/resource/Tetris" id="txtURI" /><a style="padding-left:10px" href="javascript:Load()">Load</a></div>
+<div id="log"></div>
+<div id="mainContainer"></div>
+<div id="divViolations">
+    <table id="tblViolations" class="tblViolationStyle">
+        <thead><tr class="tblViolationStyle"><th>Violation Type</th><th>Details</th><th>URI Info</th></tr></thead>
+        <tbody></tbody>
+    </table>
+     
+</div>
+<div id="container">
+    <div id="infovis"></div>
+</div>
+<div>Pause: <input type="checkbox" id="chkPause" onclick="Initialize();//if(chkPause.checked) setTimeout(GetNext, 10000);" /></div>
+<div id="data">
+    
+</div>
+
+

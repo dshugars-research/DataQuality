@@ -1,0 +1,26 @@
+﻿<div id="container">
+    <div id="infovis" style="width:1200px;height:750px;background-color:black">here</div>
+</div>
+<div id="rawJson"></div>
+@{
+
+    var res = Newtonsoft.Json.JsonConvert.SerializeObject(Model.Data.json, Newtonsoft.Json.Formatting.Indented);
+    //res = res.Replace("CanvasStyles", "$CanvasStyles");
+    // res = res.Replace("canvas_visibility", "$canvas-visibility");
+    res = res.Replace("height", "$height");
+    res = res.Replace("width", "$width");
+    res = res.Replace("dim", "$dim");
+    res = res.Replace("type", "$type");
+    res = res.Replace("color", "$color");
+}
+<script type="text/jscript">
+    alert("inside intialize view. jsondata:")
+
+    dataSet = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Data.Graphs, Newtonsoft.Json.Formatting.Indented))
+    document.getElementById("rawJson").innerHTML = @Html.Raw(res)
+    jsonData = @Html.Raw(res)
+    // jsonData = NormalizeProperties(jsonData);
+   
+    alert(JSON.stringify(jsonData));
+</script>
+
